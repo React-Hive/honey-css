@@ -1,0 +1,82 @@
+{
+  "name": "@react-hive/honey-css",
+  "version": "1.0.0",
+  "description": "A lightweight CSS tokenizer and parser that produces a simple AST for custom CSS processing.",
+  "keywords": [
+    "css",
+    "parser",
+    "tokenizer",
+    "ast",
+    "css-ast",
+    "css-in-js",
+    "compiler",
+    "transformer",
+    "react-hive",
+    "honey-style"
+  ],
+  "homepage": "https://github.com/React-Hive/honey-css",
+  "bugs": {
+    "url": "https://github.com/React-Hive/honey-css/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/React-Hive/honey-css.git"
+  },
+  "author": "Mike Aliinyk <m.aliynik@gmail.com>",
+  "license": "MIT",
+  "scripts": {
+    "clean": "rm -rf dist coverage",
+    "build": "webpack --config webpack.config.mjs",
+    "test": "jest --coverage",
+    "prepublishOnly": "pnpm clean && pnpm test && pnpm build"
+  },
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": [
+    "dist",
+    "!dist/**/__mocks__",
+    "!dist/**/__tests__",
+    "!dist/**/jest*"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "devDependencies": {
+    "@eslint/js": "9.39.1",
+    "@mdx-js/loader": "3.1.1",
+    "@types/jest": "29.5.14",
+    "@types/node": "22.19.1",
+    "copy-webpack-plugin": "13.0.1",
+    "eslint": "9.39.1",
+    "eslint-plugin-react": "7.37.5",
+    "jest": "29.7.0",
+    "prettier": "3.6.2",
+    "ts-jest": "29.4.4",
+    "ts-loader": "9.5.4",
+    "typescript": "5.9.3",
+    "typescript-eslint": "8.47.0",
+    "webpack": "5.105.2",
+    "webpack-cli": "6.0.1"
+  },
+  "jest": {
+    "preset": "ts-jest",
+    "testMatch": [
+      "**/src/**/*.spec.ts"
+    ],
+    "moduleNameMapper": {
+      "^~/(.*)$": "<rootDir>/src/$1"
+    }
+  }
+}
