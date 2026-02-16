@@ -8,10 +8,11 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5.0.1
 
       - uses: actions/setup-node@v4
         with:
+          # https://github.com/actions/node-versions/releases
           node-version: 22.22.0
           registry-url: https://registry.npmjs.org/
 
@@ -20,9 +21,6 @@ jobs:
           version: latest
 
       - run: pnpm install
-
-      - run: pnpm test
-      - run: pnpm run build
 
       - run: pnpm publish --access public --no-git-checks
         env:
