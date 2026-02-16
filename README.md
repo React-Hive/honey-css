@@ -2,7 +2,7 @@
 
 A lightweight CSS tokenizer + parser that produces a minimal AST for custom CSS processing.
 
-This package is designed as a small foundation for building **CSS transformers**, **preprocessors**, and **CSS-in-JS tooling** – without pulling in heavyweight dependencies like PostCSS.
+This package is designed as a small foundation for building **CSS transformers**, **preprocessors**, and **CSS-in-JS tooling** — without pulling in heavyweight dependencies like PostCSS.
 
 ---
 
@@ -25,7 +25,7 @@ They solve *everything*, but sometimes you only need:
 - 🧩 Easy to extend
 - ⚡ Perfect for custom styling engines
 
-If you're building your own styling layer or transformer pipeline, this gives you the core building blocks – without unnecessary overhead.
+If you're building your own styling layer or transformer pipeline, this gives you the core building blocks — without unnecessary overhead.
 
 ---
 
@@ -35,12 +35,12 @@ If you're building your own styling layer or transformer pipeline, this gives yo
 - ✅ Parses tokens into a minimal developer-friendly AST
 - ✅ Supports nested rules and nested at-rules
 - ✅ Handles common real-world CSS syntax:
-    - declarations (`color: red;`)
-    - selectors (`.btn:hover {}`)
-    - at-rules (`@media (...) {}`)
-    - params groups (`url(...)`, `var(...)`)
-    - quoted strings (`content: "hello"`)
-    - block comments (`/* ... */`)
+  - declarations (`color: red;`)
+  - selectors (`.btn:hover {}`)
+  - at-rules (`@media (...) {}`)
+  - params groups (`url(...)`, `var(...)`)
+  - quoted strings (`content: "hello"`)
+  - block comments (`/* ... */`)
 - ✅ Tiny, fast, and easy to extend
 - ✅ Built for CSS-in-JS engines and custom compilers
 
@@ -73,9 +73,9 @@ console.log(tokens);
 
 Output:
 
-```json
+```
 [
-  { type: "text", value: ".btn" },
+  { "type": "text", value: ".btn" },
   { type: "braceOpen" },
 
   { type: "text", value: "color" },
@@ -108,7 +108,7 @@ console.log(ast);
 
 Output:
 
-```json
+```
 {
   type: "stylesheet",
   body: [
@@ -126,6 +126,62 @@ Output:
   ]
 }
 ```
+
+## 🧭 Token Cursor Utilities
+
+For writing your own parser logic, transformers, or custom readers, honey-css provides a small helper:
+
+**createCssTokenCursor**
+
+The cursor is a lightweight abstraction over the token stream that enables:
+- lookahead (`peek`)
+- sequential reading (`next`)
+- safe assertions (`expect`)
+- speculative parsing (`mark` + `reset`)
+- reading chunks (`readUntil`)
+- skipping tokens for recovery (`skipUntil`)
+
+#### Example: Reading Tokens Manually
+
+```ts
+import { tokenizeCss, createCssTokenCursor } from "@react-hive/honey-css";
+
+const tokens = tokenizeCss('color: red;');
+const cursor = createCssTokenCursor(tokens);
+
+// Read property name
+const prop = cursor.readUntil(['colon']);
+cursor.expect('colon');
+
+// Read value
+const value = cursor.readUntil(['semicolon']);
+cursor.expect('semicolon');
+
+console.log(prop);  // "color"
+console.log(value); // "red"
+```
+
+### Cursor API
+
+- `peek()` - Look at the current token without consuming it
+- `next()` - Consume the current token and advance
+- `isEof()` - Returns true when the token stream is finished
+- `expect(type)` - Assert the next token type (throws if mismatch)
+- `mark()/reset()` - Create checkpoints for speculative parsing
+- `readUntil([...])` - Read combined text/string/params until a stop token
+- `skipUntil([...])` - Skip tokens until a stop token is found
+
+#### Example: Skipping Until a Block Ends
+
+```ts
+cursor.skipUntil(["braceClose"]);
+cursor.expect("braceClose");
+```
+
+This is extremely useful for:
+- parser error recovery
+- ignoring unsupported syntax
+- skipping unknown nested blocks
 
 ## 🌳 AST Overview
 
