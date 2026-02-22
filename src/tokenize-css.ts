@@ -25,24 +25,47 @@ const isBoundaryChar = (ch: string): boolean =>
 /**
  * Tokenizes a CSS-like input string into a sequence of Honey CSS tokens.
  *
- * This tokenizer is intentionally lightweight and designed for parsing
- * Honey-specific CSS extensions such as:
+ * This function is the first stage of the Honey CSS compilation pipeline.
+ * It performs a single-pass lexical scan and produces a flat stream of tokens
+ * that can later be consumed by the recursive-descent parser.
  *
- * - Custom at-rules: `@honey-media (...) { ... }`
- * - Nested selectors: `&:hover { ... }`
- * - CSS variables: `--primary-color: red;`
+ * Unlike a strict CSS tokenizer, this implementation is intentional:
  *
- * Supported syntax:
- * - Braces: `{` `}`
- * - Colons and semicolons: `:` `;`
- * - At-rule marker: `@`
- * - Parentheses groups: `(sm:down)`
- * - Quoted strings: `"..."`, `'...'`
- * - Block comments: `/* ... *\/`
+ * - Lightweight (no external dependencies)
+ * - Tolerant (fails safely on malformed input)
+ * - Extended for CSS-in-JS use cases
+ *
+ * In addition to standard CSS constructs, it supports:
+ *
+ * - Custom at-rules (`@honey-media`, `@honey-stack`, etc.)
+ * - Nested selectors (`&:hover`, `& > .child`)
+ * - CSS variables (`--color: red`)
+ * - JavaScript-style single-line comments (`// comment`)
+ * - Multiline block comments (`/* comment *\/`)
+ * - Nested parentheses groups (`calc(...)`, `var(...)`)
+ * - Escaped characters inside strings
+ *
+ * The tokenizer:
+ *
+ * - Skips all whitespace
+ * - Skips both block (`/* *\/`) and single-line (`//`) comments
+ * - Preserves balanced parentheses as a single `params` token
+ * - Preserves quoted strings as `string` tokens (without quotes)
+ * - Emits structural tokens (`braceOpen`, `braceClose`, `colon`, `semicolon`, `at`)
+ * - Emits all other text as trimmed `text` tokens
+ *
+ * Safety guarantees:
+ *
+ * - Unterminated comments do not crash tokenization
+ * - Unterminated strings do not throw
+ * - Infinite loops are prevented by fallback index advancement
+ *
+ * The returned token stream is order-preserving and does not perform
+ * semantic validation. Structural correctness is handled by the parser stage.
  *
  * @param input - Raw CSS string to tokenize.
  *
- * @returns An ordered array of tokens.
+ * @returns Ordered array of {@link HoneyCssToken} objects.
  */
 export const tokenizeCss = (input: string): HoneyCssToken[] => {
   const tokens: HoneyCssToken[] = [];
@@ -78,6 +101,46 @@ export const tokenizeCss = (input: string): HoneyCssToken[] => {
   };
 
   /**
+   * Skips JavaScript-style single-line comments of the form:
+   *
+   * ```css
+   * // comment text
+   * ```
+   *
+   * This syntax is not part of standard CSS,
+   * but is commonly used in CSS-in-JS template literals.
+   *
+   * The comment is skipped until a newline character (`\n`)
+   * or the end of input is reached.
+   *
+   * If the comment is unterminated (EOF without newline),
+   * tokenization safely stops at the end of the input.
+   *
+   * @returns `true` if a single-line comment was detected and skipped,
+   * otherwise `false`.
+   */
+  const skipSingleLineComment = (): boolean => {
+    if (peek() !== '/' || peekNext() !== '/') {
+      return false;
+    }
+
+    index += 2; // skip "//"
+
+    while (!isEof()) {
+      const ch = peek();
+
+      if (ch === '\n') {
+        index++; // consume newline
+        break;
+      }
+
+      index++;
+    }
+
+    return true;
+  };
+
+  /**
    * Skips CSS block comments of the form:
    *
    * ```css
@@ -88,7 +151,7 @@ export const tokenizeCss = (input: string): HoneyCssToken[] => {
    *
    * @returns `true` if a comment was skipped.
    */
-  const skipComment = (): boolean => {
+  const skipMultiLineComment = (): boolean => {
     if (peek() !== '/' || peekNext() !== '*') {
       return false;
     }
@@ -201,14 +264,37 @@ export const tokenizeCss = (input: string): HoneyCssToken[] => {
   };
 
   /**
-   * Reads plain text until a boundary character is reached.
+   * Reads a contiguous plain-text segment until a structural boundary
+   * character is encountered.
    *
-   * This is used for:
-   * - Selectors (`.btn`, `&:hover`)
-   * - Property names (`color`)
-   * - Values (`red`, `12px`)
+   * This function is responsible for collecting free-form CSS text such as:
    *
-   * @returns Trimmed text content.
+   * - Selectors (`.btn`, `&:hover`, `.parent > .child`)
+   * - Property names (`color`, `border-bottom-width`)
+   * - Values (`red`, `12px`, `100%`, `red!important`)
+   *
+   * Reading stops when a boundary character is reached.
+   * Boundary characters represent structural syntax in CSS and include:
+   *
+   * - Block delimiters: `{` `}`
+   * - Declaration delimiters: `:` `;`
+   * - At-rule marker: `@`
+   * - Parentheses start: `(`
+   * - String delimiters: `'` `"`
+   * - Comment initiator: `/`
+   *
+   * The boundary character itself is NOT consumed here —
+   * it is handled separately by the main tokenizer loop.
+   *
+   * The returned value is trimmed to remove leading/trailing whitespace,
+   * ensuring clean token values without altering internal spacing.
+   *
+   * Safety:
+   * - Stops at EOF safely
+   * - Never throws
+   * - Prevents infinite loops via boundary checks
+   *
+   * @returns Trimmed text segment, or an empty string if no text was read.
    */
   const readText = (): string => {
     let result = '';
@@ -240,7 +326,7 @@ export const tokenizeCss = (input: string): HoneyCssToken[] => {
       break;
     }
 
-    if (skipComment()) {
+    if (skipSingleLineComment() || skipMultiLineComment()) {
       continue;
     }
 

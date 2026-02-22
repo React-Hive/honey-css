@@ -167,6 +167,46 @@ describe('[tokenizeCss]: tokenize CSS input', () => {
     ]);
   });
 
+  it('should skip single-line // comments completely', () => {
+    const tokens = tokenizeCss(`
+      color: red;
+  
+      // this is a single-line comment
+      padding: 12px;
+    `);
+
+    expect(tokens).toStrictEqual([
+      { type: 'text', value: 'color' },
+      { type: 'colon' },
+      { type: 'text', value: 'red' },
+      { type: 'semicolon' },
+
+      { type: 'text', value: 'padding' },
+      { type: 'colon' },
+      { type: 'text', value: '12px' },
+      { type: 'semicolon' },
+    ]);
+  });
+
+  it('should skip inline // comments after declarations', () => {
+    const tokens = tokenizeCss(`
+      color: red; // inline comment
+      margin: 8px; // another comment
+    `);
+
+    expect(tokens).toStrictEqual([
+      { type: 'text', value: 'color' },
+      { type: 'colon' },
+      { type: 'text', value: 'red' },
+      { type: 'semicolon' },
+
+      { type: 'text', value: 'margin' },
+      { type: 'colon' },
+      { type: 'text', value: '8px' },
+      { type: 'semicolon' },
+    ]);
+  });
+
   it('should skip multiline block comments completely', () => {
     const tokens = tokenizeCss(`
       color: red;
