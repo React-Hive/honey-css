@@ -1,4 +1,4 @@
-import { tokenizeCss } from '~/tokenize-css';
+import { tokenizeCss } from '../tokenize-css';
 
 describe('[tokenizeCss]: tokenize CSS input', () => {
   it('should return empty array for empty input', () => {

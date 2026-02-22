@@ -1,6 +1,6 @@
 import { assert } from '@react-hive/honey-utils';
 
-import type { HoneyCssToken, HoneyCssTokenType } from '~/types';
+import type { HoneyCssToken, HoneyCssTokenType } from './types';
 
 /**
  * A lightweight cursor abstraction over a token stream.

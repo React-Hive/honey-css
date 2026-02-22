@@ -1,4 +1,4 @@
-import type { HoneyCssToken } from '~/types';
+import type { HoneyCssToken } from './types';
 
 /**
  * Determines whether a character should terminate a plain text read.
