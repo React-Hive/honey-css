@@ -1,4 +1,4 @@
-import { tokenizeCss } from '../tokenize-css';
+import { tokenizeCss } from '~/tokenize-css';
 
 describe('[tokenizeCss]: tokenize CSS input', () => {
   it('should return empty array for empty input', () => {
@@ -410,6 +410,49 @@ describe('[tokenizeCss]: tokenize CSS input', () => {
       { type: 'text', value: 'content' },
       { type: 'colon' },
       { type: 'string', value: 'oops;' },
+    ]);
+  });
+
+  it('should tokenize @keyframes blocks correctly', () => {
+    const tokens = tokenizeCss(`
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+    `);
+
+    expect(tokens).toStrictEqual([
+      { type: 'at' },
+      { type: 'text', value: 'keyframes spin' },
+      { type: 'braceOpen' },
+
+      { type: 'text', value: '0%' },
+      { type: 'braceOpen' },
+
+      { type: 'text', value: 'transform' },
+      { type: 'colon' },
+      { type: 'text', value: 'rotate' },
+      { type: 'params', value: '(0deg)' },
+      { type: 'semicolon' },
+
+      { type: 'braceClose' },
+
+      { type: 'text', value: '100%' },
+      { type: 'braceOpen' },
+
+      { type: 'text', value: 'transform' },
+      { type: 'colon' },
+      { type: 'text', value: 'rotate' },
+      { type: 'params', value: '(360deg)' },
+      { type: 'semicolon' },
+
+      { type: 'braceClose' },
+
+      { type: 'braceClose' },
     ]);
   });
 });

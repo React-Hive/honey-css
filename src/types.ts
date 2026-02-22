@@ -10,14 +10,14 @@
  * - Plain text chunks (selectors, property names, values)
  */
 export type HoneyCssTokenType =
-    | 'braceOpen'
-    | 'braceClose'
-    | 'colon'
-    | 'semicolon'
-    | 'at'
-    | 'params'
-    | 'string'
-    | 'text';
+  | 'braceOpen'
+  | 'braceClose'
+  | 'colon'
+  | 'semicolon'
+  | 'at'
+  | 'params'
+  | 'string'
+  | 'text';
 
 /**
  * A single token produced by {@link tokenizeCss}.
@@ -25,7 +25,7 @@ export type HoneyCssTokenType =
  * Some token types (like `text`, `params`, `string`) include a `value`,
  * while punctuation tokens do not.
  */
-export type HoneyCssToken = {
-    type: HoneyCssTokenType;
-    value?: string;
-};
+export interface HoneyCssToken {
+  type: HoneyCssTokenType;
+  value?: string;
+}
