@@ -316,6 +316,72 @@ Output:
 }
 ```
 
+🧩 **resolveCssSelector**
+
+When implementing nested rules (like in CSS-in-JS engines), child selectors must be resolved against their parent selector.
+
+The `resolveCssSelector` helper performs this safely and predictably.
+
+It:
+
+- Performs full Cartesian expansion of comma-separated selector lists
+- Replaces explicit parent references (`&`)
+- Creates descendant relationships when `&` is not present
+- Preserves complex selectors, including:
+  - Pseudo-classes (`:hover`)
+  - Pseudo-elements (`::before`)
+  - Attribute selectors (`[data-x="a,b"]`)
+  - Nested selector functions (`:is(...)`, `:not(...)`)
+  - Combinators (`>`, `+`, `~`)
+
+#### Basic Example
+
+```ts
+import { resolveCssSelector } from "@react-hive/honey-css";
+
+resolveCssSelector(".child", ".scope");
+// → ".scope .child"
+
+resolveCssSelector("&:hover", ".btn");
+// → ".btn:hover"
+```
+
+#### Comma Expansion
+
+Both parent and child selectors may contain comma-separated lists.
+
+```ts
+resolveCssSelector(".a, .b", ".scope");
+// → ".scope .a, .scope .b"
+
+resolveCssSelector(".x, .y", ".a, .b");
+// → ".a .x, .a .y, .b .x, .b .y"
+```
+
+#### Parent Reference (&)
+
+If the child selector contains `&`, it is replaced with the parent selector.
+
+```ts
+resolveCssSelector("& + &", ".item");
+// → ".item + .item"
+
+resolveCssSelector("&:hover, .icon", ".btn, .card");
+// → ".btn:hover, .btn .icon, .card:hover, .card .icon"
+```
+
+#### Complex Selectors
+
+The resolver safely handles nested commas inside functions and attribute selectors.
+
+```ts
+resolveCssSelector(':is(.a, .b)', '.scope');
+// → ".scope :is(.a, .b)"
+
+resolveCssSelector('[data-x="a,b"]', '.scope');
+// → ".scope [data-x=\"a,b\"]"
+```
+
 ---
 
 ## 🌳 AST Overview
