@@ -270,6 +270,52 @@ console.log(keyOrSelector); // ".btn"
 
 This helper makes it easy to implement nested rule parsing without writing complex logic.
 
+🧱 **parseCssDeclaration**
+
+When building a custom parser on top of the token cursor, you often need to parse a single declaration inside a rule block.
+
+The `parseCssDeclaration` handles this safely and consistently.
+
+It:
+- Expects the cursor to be positioned at the `:` token
+- Reads the value until `;` or `}`
+- Supports missing trailing semicolons
+- Preserves strings and nested params like `var(...)` or `url(...)`
+
+#### Example
+
+```ts
+import {
+  tokenizeCss,
+  createCssTokenCursor,
+  parseCssDeclaration,
+} from "@react-hive/honey-css";
+
+const tokens = tokenizeCss(`
+  color: var(--primary, red);
+`);
+
+const cursor = createCssTokenCursor(tokens);
+
+// Read property name
+const prop = cursor.readUntil(["colon"]);
+
+// Parse declaration
+const declaration = parseCssDeclaration(cursor, prop);
+
+console.log(declaration);
+```
+
+Output:
+
+```
+{
+  type: "declaration",
+  prop: "color",
+  value: "var(--primary, red)"
+}
+```
+
 ---
 
 ## 🌳 AST Overview
