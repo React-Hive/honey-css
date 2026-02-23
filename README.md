@@ -54,6 +54,8 @@ Install with pnpm (recommended):
 pnpm add @react-hive/honey-css
 ```
 
+---
+
 ## 🚀 Quick Start
 
 Tokenizing CSS
@@ -92,6 +94,8 @@ Output:
 ]
 ```
 
+---
+
 ## Parsing CSS into AST
 
 ```ts
@@ -127,6 +131,8 @@ Output:
 }
 ```
 
+---
+
 ## 🧭 Token Cursor Utilities
 
 For writing your own parser logic, transformers, or custom readers, honey-css provides a small helper:
@@ -134,6 +140,7 @@ For writing your own parser logic, transformers, or custom readers, honey-css pr
 **createCssTokenCursor**
 
 The cursor is a lightweight abstraction over the token stream that enables:
+
 - lookahead (`peek`)
 - sequential reading (`next`)
 - safe assertions (`expect`)
@@ -141,7 +148,19 @@ The cursor is a lightweight abstraction over the token stream that enables:
 - reading chunks (`readUntil`)
 - skipping tokens for recovery (`skipUntil`)
 
-#### Example: Reading Tokens Manually
+### Cursor API
+
+The `createCssTokenCursor(tokens)` returns an object with:
+
+- `peek()` - Look at the current token without consuming it
+- `next()` - Consume the current token and advance
+- `isEof()` - Returns true when the token stream is finished
+- `expect(type)` - Assert the next token type (throws if mismatch)
+- `mark()/reset(mark)` - Create checkpoints for speculative parsing
+- `readUntil([...])` - Read combined `text`/`string`/`params` until a stop token
+- `skipUntil([...])` - Skip tokens until a stop token is found
+
+#### Example: Reading a Declaration Manually
 
 ```ts
 import { tokenizeCss, createCssTokenCursor } from "@react-hive/honey-css";
@@ -161,16 +180,6 @@ console.log(prop);  // "color"
 console.log(value); // "red"
 ```
 
-### Cursor API
-
-- `peek()` - Look at the current token without consuming it
-- `next()` - Consume the current token and advance
-- `isEof()` - Returns true when the token stream is finished
-- `expect(type)` - Assert the next token type (throws if mismatch)
-- `mark()/reset()` - Create checkpoints for speculative parsing
-- `readUntil([...])` - Read combined text/string/params until a stop token
-- `skipUntil([...])` - Skip tokens until a stop token is found
-
 #### Example: Skipping Until a Block Ends
 
 ```ts
@@ -179,9 +188,67 @@ cursor.expect("braceClose");
 ```
 
 This is extremely useful for:
+
 - parser error recovery
 - ignoring unsupported syntax
 - skipping unknown nested blocks
+
+**readCssSelector**
+
+When building custom rule parsing logic, you often need to read a selector safely until `{`.
+
+The `readCssSelector` reconstructs the selector from tokens while preserving:
+
+- pseudo selectors (`:hover`)
+- pseudo elements (`::before`)
+- attribute selectors (`[data-id="x"]`)
+- combinators (`>`, `+`, `~`)
+- pseudo functions (`:not(...)`, `:nth-child(...`))
+
+It stops before consuming the `{` token.
+
+#### Example: Reading a Selector
+
+```ts
+import {
+  tokenizeCss,
+  createCssTokenCursor,
+  readCssSelector,
+} from "@react-hive/honey-css";
+
+const tokens = tokenizeCss(`
+  button:not(:disabled):hover {
+    opacity: 0.5;
+  }
+`);
+
+const cursor = createCssTokenCursor(tokens);
+
+const selector = readCssSelector(cursor);
+cursor.expect("braceOpen");
+
+console.log(selector);
+// "button:not(:disabled):hover"
+```
+
+This is especially useful when writing your own rule parser or extending parseCss.
+
+#### Example: Speculative Parsing
+
+```ts
+const mark = cursor.mark();
+const maybeSelector = readCssSelector(cursor);
+
+if (cursor.peek()?.type === "braceOpen") {
+  // It's a rule
+  cursor.expect("braceOpen");
+} else {
+  // Not a rule — rewind
+  cursor.reset(mark);
+}
+```
+
+---
 
 ## 🌳 AST Overview
 

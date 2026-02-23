@@ -1,13 +1,21 @@
 import { createCssTokenCursor } from '../create-css-token-cursor';
 
 describe('[createCssTokenCursor]: token cursor utilities', () => {
-  it('should return undefined when peeking an empty token list', () => {
+  it('should behave safely on an empty token stream', () => {
     const cursor = createCssTokenCursor([]);
 
     expect(cursor.peek()).toBeUndefined();
     expect(cursor.next()).toBeUndefined();
+    expect(cursor.isEof()).toBe(true);
 
-    expect(cursor.isEof()).toBeTruthy();
+    expect(cursor.readUntil(['semicolon'])).toBe('');
+
+    expect(() => cursor.skipUntil(['semicolon'])).not.toThrow();
+    expect(cursor.isEof()).toBe(true);
+
+    expect(() => cursor.expect('braceOpen')).toThrow(
+      '[@react-hive/honey-css]: Expected "braceOpen" but reached end of input.',
+    );
   });
 
   it('should allow peeking without consuming tokens', () => {
@@ -39,33 +47,12 @@ describe('[createCssTokenCursor]: token cursor utilities', () => {
     });
   });
 
-  it('should throw when expect() reaches end of input', () => {
-    const cursor = createCssTokenCursor([]);
-
-    expect(() => cursor.expect('braceOpen')).toThrow(
-      '[@react-hive/honey-css]: Expected "braceOpen" but reached end of input.',
-    );
-  });
-
   it('should throw when expect() receives the wrong token type', () => {
     const cursor = createCssTokenCursor([{ type: 'semicolon' }]);
 
     expect(() => cursor.expect('braceOpen')).toThrow(
       '[@react-hive/honey-css]: Expected "braceOpen" but got "semicolon".',
     );
-  });
-
-  it('should read combined text tokens until stop type is reached', () => {
-    const cursor = createCssTokenCursor([
-      { type: 'text', value: 'color' },
-      { type: 'colon' },
-      { type: 'text', value: 'red' },
-    ]);
-
-    const result = cursor.readUntil(['colon']);
-
-    expect(result).toBe('color');
-    expect(cursor.peek()).toStrictEqual({ type: 'colon' });
   });
 
   it('should include string tokens wrapped in quotes when reading text', () => {
@@ -220,13 +207,6 @@ describe('[createCssTokenCursor]: token cursor utilities', () => {
     expect(cursor.peek()).toBeUndefined();
   });
 
-  it('should not throw when skipping on an empty token stream', () => {
-    const cursor = createCssTokenCursor([]);
-
-    expect(() => cursor.skipUntil(['semicolon'])).not.toThrow();
-    expect(cursor.isEof()).toBe(true);
-  });
-
   it('should allow saving and restoring cursor position with mark/reset', () => {
     const cursor = createCssTokenCursor([
       { type: 'text', value: 'color' },
@@ -267,20 +247,46 @@ describe('[createCssTokenCursor]: token cursor utilities', () => {
       { type: 'text', value: 'c' },
     ]);
 
-    expect(cursor.next()?.value).toBe('a');
+    expect(cursor.next()).toStrictEqual({ type: 'text', value: 'a' });
 
     const mark = cursor.mark();
 
-    expect(cursor.next()?.value).toBe('b');
-    expect(cursor.next()?.value).toBe('c');
+    expect(cursor.next()).toStrictEqual({ type: 'text', value: 'b' });
+    expect(cursor.next()).toStrictEqual({ type: 'text', value: 'c' });
 
     expect(cursor.isEof()).toBe(true);
 
     cursor.reset(mark);
 
-    // Should resume from "b"
-    expect(cursor.next()?.value).toBe('b');
-    expect(cursor.next()?.value).toBe('c');
+    expect(cursor.next()).toStrictEqual({ type: 'text', value: 'b' });
+    expect(cursor.next()).toStrictEqual({ type: 'text', value: 'c' });
     expect(cursor.isEof()).toBe(true);
+  });
+
+  it('should insert a space only between consecutive text tokens', () => {
+    const cursor = createCssTokenCursor([
+      { type: 'text', value: 'keyframes' },
+      { type: 'text', value: 'spin' },
+      { type: 'braceOpen' },
+    ]);
+
+    const result = cursor.readUntil(['braceOpen']);
+
+    expect(result).toBe('keyframes spin');
+    expect(cursor.peek()?.type).toBe('braceOpen');
+  });
+
+  it('should not insert extra spaces between string and adjacent text tokens', () => {
+    const cursor = createCssTokenCursor([
+      { type: 'text', value: 'a[href=' },
+      { type: 'string', value: 'x' },
+      { type: 'text', value: ']' },
+      { type: 'semicolon' },
+    ]);
+
+    const result = cursor.readUntil(['semicolon']);
+
+    expect(result).toBe('a[href="x"]');
+    expect(cursor.peek()?.type).toBe('semicolon');
   });
 });

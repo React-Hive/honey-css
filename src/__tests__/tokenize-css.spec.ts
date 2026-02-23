@@ -151,6 +151,73 @@ describe('[tokenizeCss]: tokenize CSS input', () => {
     ]);
   });
 
+  it('should tolerate spaces inside attribute selector brackets (tokenizer trims text tokens)', () => {
+    const tokens = tokenizeCss(`a[ href = "x" ]{color:red;}`);
+
+    expect(tokens).toStrictEqual([
+      { type: 'text', value: 'a[ href =' },
+      { type: 'string', value: 'x' },
+      { type: 'text', value: ']' },
+
+      { type: 'braceOpen' },
+
+      { type: 'text', value: 'color' },
+      { type: 'colon' },
+      { type: 'text', value: 'red' },
+      { type: 'semicolon' },
+
+      { type: 'braceClose' },
+    ]);
+  });
+
+  it('should treat attribute operators correctly (~=, |=, ^=, $=, *=)', () => {
+    const tokens = tokenizeCss(
+      `a[rel~="tag"][lang|="en"][data-x^="a"][data-y$="b"][data-z*="c"]{opacity:1;}`,
+    );
+
+    expect(tokens).toStrictEqual([
+      { type: 'text', value: 'a[rel~=' },
+      { type: 'string', value: 'tag' },
+      { type: 'text', value: '][lang|=' },
+      { type: 'string', value: 'en' },
+      { type: 'text', value: '][data-x^=' },
+      { type: 'string', value: 'a' },
+      { type: 'text', value: '][data-y$=' },
+      { type: 'string', value: 'b' },
+      { type: 'text', value: '][data-z*=' },
+      { type: 'string', value: 'c' },
+      { type: 'text', value: ']' },
+      { type: 'braceOpen' },
+
+      { type: 'text', value: 'opacity' },
+      { type: 'colon' },
+      { type: 'text', value: '1' },
+      { type: 'semicolon' },
+
+      { type: 'braceClose' },
+    ]);
+  });
+
+  it('should treat attribute selector combined with pseudo selector correctly', () => {
+    const tokens = tokenizeCss(`a[href="x"]:focus{outline:0;}`);
+
+    expect(tokens).toStrictEqual([
+      { type: 'text', value: 'a[href=' },
+      { type: 'string', value: 'x' },
+      { type: 'text', value: ']' },
+      { type: 'colon' },
+      { type: 'text', value: 'focus' },
+      { type: 'braceOpen' },
+
+      { type: 'text', value: 'outline' },
+      { type: 'colon' },
+      { type: 'text', value: '0' },
+      { type: 'semicolon' },
+
+      { type: 'braceClose' },
+    ]);
+  });
+
   it('should tokenize id selectors correctly', () => {
     const tokens = tokenizeCss(`#burger-btn{display:none;}`);
 

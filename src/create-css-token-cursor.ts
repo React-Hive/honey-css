@@ -160,6 +160,7 @@ export const createCssTokenCursor = (tokens: HoneyCssToken[]): HoneyTokenCursor 
 
   const readUntil = (stopTypes: HoneyCssTokenType[]): string => {
     let result = '';
+    let prevType: HoneyCssTokenType | undefined;
 
     while (!isEof()) {
       const token = peek();
@@ -169,7 +170,8 @@ export const createCssTokenCursor = (tokens: HoneyCssToken[]): HoneyTokenCursor 
       }
 
       if (token.type === 'text') {
-        if (result) {
+        // Only space-join consecutive text chunks
+        if (prevType === 'text' && result) {
           result += ' ';
         }
 
@@ -182,6 +184,7 @@ export const createCssTokenCursor = (tokens: HoneyCssToken[]): HoneyTokenCursor 
         result += token.value;
       }
 
+      prevType = token.type;
       next();
     }
 
