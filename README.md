@@ -193,7 +193,7 @@ This is extremely useful for:
 - ignoring unsupported syntax
 - skipping unknown nested blocks
 
-**readCssSelector**
+🔎 **readCssSelector**
 
 When building custom rule parsing logic, you often need to read a selector safely until `{`.
 
@@ -207,7 +207,7 @@ The `readCssSelector` reconstructs the selector from tokens while preserving:
 
 It stops before consuming the `{` token.
 
-#### Example: Reading a Selector
+#### Example
 
 ```ts
 import {
@@ -231,22 +231,44 @@ console.log(selector);
 // "button:not(:disabled):hover"
 ```
 
-This is especially useful when writing your own rule parser or extending parseCss.
+🔁 **readCssKeyOrSelector**
 
-#### Example: Speculative Parsing
+Inside a block, grammar becomes ambiguous:
+
+```
+selector { ... }
+property: value;
+```
+
+To resolve this, use `readCssKeyOrSelector`.
+
+It:
+
+- Speculatively parses a selector
+- Accepts it only if { follows
+- Otherwise, rewinds and reads a declaration key
+
+#### Example
 
 ```ts
-const mark = cursor.mark();
-const maybeSelector = readCssSelector(cursor);
+import {
+  tokenizeCss,
+  createCssTokenCursor,
+  readCssKeyOrSelector,
+} from "@react-hive/honey-css";
 
-if (cursor.peek()?.type === "braceOpen") {
-  // It's a rule
-  cursor.expect("braceOpen");
-} else {
-  // Not a rule — rewind
-  cursor.reset(mark);
-}
+const tokens = tokenizeCss(`
+  .btn { color: red; }
+`);
+
+const cursor = createCssTokenCursor(tokens);
+
+const keyOrSelector = readCssKeyOrSelector(cursor);
+
+console.log(keyOrSelector); // ".btn"
 ```
+
+This helper makes it easy to implement nested rule parsing without writing complex logic.
 
 ---
 
