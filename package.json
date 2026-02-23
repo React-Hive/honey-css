@@ -1,6 +1,6 @@
 {
   "name": "@react-hive/honey-css",
-  "version": "1.6.0",
+  "version": "1.7.0",
   "description": "A lightweight CSS tokenizer and parser that produces a simple AST for custom CSS processing.",
   "keywords": [
     "css",
