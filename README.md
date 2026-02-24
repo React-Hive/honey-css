@@ -382,6 +382,89 @@ resolveCssSelector('[data-x="a,b"]', '.scope');
 // → ".scope [data-x=\"a,b\"]"
 ```
 
+🧾 **stringifyCss**
+
+After transforming or generating a CSS AST, you can convert it back into a compact CSS string using `stringifyCss`.
+
+This is the final stage of the honey-css pipeline.
+
+What It Does:
+
+- Converts the AST back into valid compact CSS
+- Removes empty declarations (`value.trim() === ""`)
+- Removes empty rules (rule body becomes empty after stringification)
+- Removes empty block at-rules (at-rules with `body: []` that stringify to nothing)
+- Preserves directive at-rules (`body: null`) and prints them with `;`
+
+#### Example
+
+```ts
+import { stringifyCss } from "@react-hive/honey-css";
+
+const ast = {
+  type: "stylesheet",
+  body: [
+    {
+      type: "rule",
+      selector: ".btn",
+      body: [
+        { type: "declaration", prop: "padding", value: "8px" },
+        { type: "declaration", prop: "color", value: "red" },
+      ],
+    },
+  ],
+};
+
+const css = stringifyCss(ast);
+
+console.log(css);
+// ".btn{padding:8px;color:red;}"
+```
+
+#### Directive VS block at-rules
+
+The `stringifyCss` treats at-rules with `body === null` as directive-style rules and serializes them with a trailing semicolon.
+
+```ts
+import { stringifyCss } from "@react-hive/honey-css";
+
+const ast = {
+  type: "stylesheet",
+  body: [
+    {
+      type: "atRule",
+      name: "charset",
+      params: '"UTF-8"',
+      body: null,
+    },
+  ],
+};
+
+console.log(stringifyCss(ast));
+// '@charset "UTF-8";'
+```
+
+Block at-rules (`body !== null`) are serialized using curly braces: `@name params{...}`.
+
+```ts
+import { stringifyCss } from "@react-hive/honey-css";
+
+const ast = {
+  type: "stylesheet",
+  body: [
+    {
+      type: "atRule",
+      name: "media",
+      params: "(min-width: 100px)",
+      body: [],
+    },
+  ],
+};
+
+console.log(stringifyCss(ast));
+// ""
+```
+
 ---
 
 ## 🌳 AST Overview
