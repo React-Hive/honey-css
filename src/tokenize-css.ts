@@ -101,23 +101,16 @@ export const tokenizeCss = (input: string): HoneyCssToken[] => {
   };
 
   /**
-   * Skips JavaScript-style single-line comments of the form:
+   * Skips single-line comments of the form:
    *
    * ```css
    * // comment text
    * ```
    *
-   * This syntax is not part of standard CSS,
-   * but is commonly used in CSS-in-JS template literals.
-   *
    * The comment is skipped until a newline character (`\n`)
    * or the end of input is reached.
    *
-   * If the comment is unterminated (EOF without newline),
-   * tokenization safely stops at the end of the input.
-   *
-   * @returns `true` if a single-line comment was detected and skipped,
-   * otherwise `false`.
+   * @returns `true` if a single-line comment was detected and skipped, otherwise `false`.
    */
   const skipSingleLineComment = (): boolean => {
     if (peek() !== '/' || peekNext() !== '/') {
@@ -127,9 +120,7 @@ export const tokenizeCss = (input: string): HoneyCssToken[] => {
     index += 2; // skip "//"
 
     while (!isEof()) {
-      const ch = peek();
-
-      if (ch === '\n') {
+      if (peek() === '\n') {
         index++; // consume newline
         break;
       }
@@ -141,7 +132,7 @@ export const tokenizeCss = (input: string): HoneyCssToken[] => {
   };
 
   /**
-   * Skips CSS block comments of the form:
+   * Skips block comments of the form:
    *
    * ```css
    * /* comment *\/
@@ -246,9 +237,7 @@ export const tokenizeCss = (input: string): HoneyCssToken[] => {
 
       if (ch === '(') {
         depth++;
-      }
-
-      if (ch === ')') {
+      } else if (ch === ')') {
         depth--;
       }
 

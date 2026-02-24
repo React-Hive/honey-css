@@ -143,45 +143,58 @@ export interface HoneyCssAstDeclarationNode {
 }
 
 /**
- * Represents a CSS at-rule.
+ * Represents a CSS at-rule node.
  *
- * Examples:
+ * At-rules can be either:
+ *
+ * 1. **Block at-rules** — contains a rule block:
  *
  * ```css
  * @media (max-width: 768px) { ... }
  * @keyframes spin { ... }
+ * ```
+ *
+ * 2. **Directive at-rules** — end with a semicolon and do not contain a block:
+ *
+ * ```css
  * @charset "UTF-8";
+ * @import url("file.css");
  * ```
  */
 export interface HoneyCssAstAtRuleNode {
   type: 'atRule';
   /**
-   * At-rule name without the "@" prefix.
+   * The at-rule name without the "@" prefix.
    *
    * Examples:
-   * - "media"
-   * - "keyframes"
-   * - "layer"
-   * - "charset"
+   * - `"media"`
+   * - `"keyframes"`
+   * - `"layer"`
+   * - `"charset"`
    */
   name: string;
   /**
    * Optional at-rule parameters.
    *
    * Examples:
-   * - "(max-width: 768px)"
-   * - "spin"
+   * - `"(max-width: 768px)"`
    *
-   * Undefined for parameterless directives.
+   * This is undefined when the at-rule does not include parameters.
    */
   params?: string;
   /**
-   * Nodes contained inside the at-rule block.
+   * The rule block contents.
    *
-   * Empty array for directive-style rules
-   * (e.g. `@charset "UTF-8";`).
+   * - `HoneyCssAstNode[]` → block-style at-rule (`@media {...}`)
+   * - `null` → directive-style at-rule (`@charset "UTF-8";`)
+   *
+   * An empty array (`[]`) represents an explicitly empty block:
+   *
+   * ```css
+   * @media (min-width: 100px) {}
+   * ```
    */
-  body: HoneyCssAstNode[];
+  body: HoneyCssAstNode[] | null;
 }
 
 /**
