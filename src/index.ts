@@ -7,5 +7,6 @@ export * from './parse-css-declaration';
 export * from './resolve-css-selector';
 export * from './stringify-css';
 export * from './parse-css-at-rule';
+export * from './parse-css-nodes';
 export * from './parse-css-block';
 export * from './parse-css-rule';
