@@ -10,3 +10,4 @@ export * from './parse-css-at-rule';
 export * from './parse-css-nodes';
 export * from './parse-css-block';
 export * from './parse-css-rule';
+export * from './parse-css';
