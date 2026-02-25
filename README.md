@@ -467,6 +467,175 @@ console.log(stringifyCss(ast));
 
 ---
 
+## 🧱 Low-Level Block & Rule Parsers
+
+When building your own parser pipeline on top of `createCssTokenCursor`, you can use the lower-level block and rule utilities directly.
+
+These are the same building blocks used internally by `parseCss`.
+
+🧩 **parseCssAtRule**
+
+Parses an at-rule from the token stream.
+
+Supports both block-style and directive-style at-rules:
+
+```
+@media (max-width: 768px) { ... }
+@keyframes spin { ... }
+@import url("file.css");
+```
+
+It:
+
+- Merges space-delimited and params tokens correctly
+- Returns `body: null` for directive at-rules
+- Returns `body: []` for empty block at-rules
+
+#### Example
+
+```ts
+import {
+  tokenizeCss,
+  createCssTokenCursor,
+  parseCssAtRule,
+} from "@react-hive/honey-css";
+
+const tokens = tokenizeCss(`
+  @media (max-width: 768px) {
+    color: red;
+  }
+`);
+
+const cursor = createCssTokenCursor(tokens);
+
+const atRule = parseCssAtRule(cursor);
+
+console.log(atRule);
+```
+
+Output:
+
+```
+{
+  type: "atRule",
+  name: "media",
+  params: "(max-width: 768px)",
+  body: [
+    {
+      type: "declaration",
+      prop: "color",
+      value: "red"
+    }
+  ]
+}
+```
+
+🧱 **parseCssBlock**
+
+Parses the contents of a `{ ... }` block.
+
+Resolves grammar ambiguity inside blocks:
+
+```
+selector { ... }
+property: value;
+@rule ...
+```
+
+It:
+
+- Stops at the matching `}`
+- Skips stray semicolons (`;`) safely
+- Delegates:
+  - declarations → `parseCssDeclaration`
+  - nested rules → `parseCssRule`
+  - nested at-rules → `parseCssAtRule`
+
+#### Example
+
+```ts
+import {
+  tokenizeCss,
+  createCssTokenCursor,
+} from "@react-hive/honey-css";
+
+import { parseCssBlock } from "@react-hive/honey-css";
+
+const tokens = tokenizeCss(`
+  {
+    color: red;
+    .child { padding: 8px; }
+  }
+`);
+
+const cursor = createCssTokenCursor(tokens);
+cursor.expect("braceOpen");
+
+const nodes = parseCssBlock(cursor);
+
+console.log(nodes);
+```
+
+Output:
+
+```
+[
+  { type: "declaration", prop: "color", value: "red" },
+  {
+    type: "rule",
+    selector: ".child",
+    body: [
+      { type: "declaration", prop: "padding", value: "8px" }
+    ]
+  }
+]
+```
+
+🧾 **parseCssRule**
+
+Parses a CSS rule body for a given selector.
+
+- Expects the cursor to be positioned at `{`
+- Delegates body parsing to `parseCssBlock`
+- Preserves the selector exactly as provided
+
+#### Example
+
+```ts
+import {
+  tokenizeCss,
+  createCssTokenCursor,
+} from "@react-hive/honey-css";
+
+import { parseCssRule } from "@react-hive/honey-css";
+
+const tokens = tokenizeCss(`
+  {
+    color: red;
+  }
+`);
+
+const cursor = createCssTokenCursor(tokens);
+
+const rule = parseCssRule(cursor, ".btn");
+
+console.log(rule);
+```
+
+Output:
+
+```
+{
+  type: "rule",
+  selector: ".btn",
+  body: [
+    { type: "declaration", prop: "color", value: "red" }
+  ]
+}
+```
+
+---
+
 ## 🌳 AST Overview
 
 The AST is intentionally minimal and easy to traverse.
@@ -532,15 +701,19 @@ Represents:
 }
 ```
 
+---
+
 ## 🎯 Use Cases
 
-The **honey-css** is a great fit for:
+The `honey-css` intentionally exposes low-level parsing primitives so you can:
 
-- CSS-in-JS compilers
-- Custom at-rule processors
-- Design system engines
-- Lightweight CSS preprocessors
-- AST-based transformations
+- Build your own CSS compiler
+- Implement custom at-rules
+- Extend the grammar
+- Perform AST transformations mid-parse
+- Create domain-specific styling engines
+
+Instead of a monolithic parser, you get composable building blocks.
 
 It is not intended to fully replace PostCSS or implement the full CSS specification – it’s a focused foundation.
 
