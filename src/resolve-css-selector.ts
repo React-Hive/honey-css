@@ -1,12 +1,4 @@
 /**
- * Represents a supported string delimiter in CSS.
- *
- * Only single (`'`) and double (`"`) quotes are valid
- * string delimiters in CSS selectors and attribute values.
- */
-type QuoteChar = '"' | "'";
-
-/**
  * Iterates over a comma-separated CSS selector list and invokes
  * a callback for each **top-level selector part**.
  *
@@ -52,51 +44,65 @@ const forEachTopLevelSelector = (input: string, callback: (part: string) => void
   let parenDepth = 0;
   let bracketDepth = 0;
 
-  let currentQuote: QuoteChar | null = null;
+  let currentQuote: number | null = null;
   let isEscapeSeq = false;
 
   for (let i = 0; i < input.length; i++) {
-    const char = input[i];
+    const code = input.charCodeAt(i);
 
     if (isEscapeSeq) {
       isEscapeSeq = false;
       continue;
     }
 
-    if (char === '\\') {
+    if (code === 92) {
+      // "\"
       isEscapeSeq = true;
       continue;
     }
 
-    if (currentQuote) {
-      if (char === currentQuote) {
+    // Inside quoted string
+    if (currentQuote !== null) {
+      if (code === currentQuote) {
         currentQuote = null;
       }
-
       continue;
     }
 
-    if (char === '"' || char === "'") {
-      currentQuote = char;
+    // Enter quoted string
+    if (code === 34 || code === 39) {
+      currentQuote = code;
       continue;
     }
 
-    switch (char) {
-      case '(':
-        parenDepth++;
-        break;
-      case ')':
-        parenDepth--;
-        break;
-      case '[':
-        bracketDepth++;
-        break;
-      case ']':
-        bracketDepth--;
-        break;
+    // Track nesting
+    if (code === 40) {
+      // (
+      parenDepth++;
+      continue;
     }
 
-    if (char === ',' && parenDepth === 0 && bracketDepth === 0) {
+    if (code === 41) {
+      // )
+      parenDepth--;
+      continue;
+    }
+
+    if (code === 91) {
+      // [
+      bracketDepth++;
+      continue;
+    }
+
+    if (code === 93) {
+      // ]
+      bracketDepth--;
+      continue;
+    }
+
+    // Top-level comma
+    if (code === 44 && parenDepth === 0 && bracketDepth === 0) {
+      // ,
       const part = input.slice(start, i).trim();
       if (part) {
         callback(part);
@@ -175,6 +181,19 @@ export const resolveCssSelector = (selector: string, parent: string): string => 
   const parentSelector = parent.trim();
   if (!parentSelector) {
     return childSelector;
+  }
+
+  // Fast path: no comma expansion needed
+  const parentHasComma = parentSelector.indexOf(',') !== -1;
+  const childHasComma = childSelector.indexOf(',') !== -1;
+  const childHasAmp = childSelector.indexOf('&') !== -1;
+
+  if (!parentHasComma && !childHasComma) {
+    if (childHasAmp) {
+      return childSelector.replaceAll('&', parentSelector);
+    }
+
+    return `${parentSelector} ${childSelector}`;
   }
 
   const result: string[] = [];
