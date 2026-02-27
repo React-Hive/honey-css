@@ -59,16 +59,6 @@ describe('[tokenizeCss]: tokenize CSS input', () => {
     ]);
   });
 
-  it('should tokenize params groups correctly', () => {
-    const tokens = tokenizeCss('@honey-media (sm:down)');
-
-    expect(tokens).toStrictEqual([
-      { type: 'at' },
-      { type: 'text', value: 'honey-media' },
-      { type: 'params', value: '(sm:down)' },
-    ]);
-  });
-
   it('should support nested parentheses inside params group', () => {
     const tokens = tokenizeCss('(min-width: calc(100% - 1px))');
 
@@ -398,28 +388,6 @@ describe('[tokenizeCss]: tokenize CSS input', () => {
     ]);
   });
 
-  it('should tokenize a full @honey-media block correctly', () => {
-    const tokens = tokenizeCss(`
-      @honey-media (sm:down) {
-        color: red;
-      }
-    `);
-
-    expect(tokens).toStrictEqual([
-      { type: 'at' },
-      { type: 'text', value: 'honey-media' },
-      { type: 'params', value: '(sm:down)' },
-      { type: 'braceOpen' },
-
-      { type: 'text', value: 'color' },
-      { type: 'colon' },
-      { type: 'text', value: 'red' },
-      { type: 'semicolon' },
-
-      { type: 'braceClose' },
-    ]);
-  });
-
   it('should tokenize CSS custom properties (variables) correctly', () => {
     const tokens = tokenizeCss(`
       :root {
@@ -560,6 +528,62 @@ describe('[tokenizeCss]: tokenize CSS input', () => {
       { type: 'braceClose' },
 
       { type: 'braceClose' },
+    ]);
+  });
+
+  it('should tokenize @scope with to() target correctly', () => {
+    const tokens = tokenizeCss(`
+      @scope (.card) to (.title) {
+        padding: 8px;
+      }
+    `);
+
+    expect(tokens).toStrictEqual([
+      { type: 'at' },
+      { type: 'text', value: 'scope' },
+      { type: 'params', value: '(.card)' },
+      { type: 'text', value: 'to' },
+      { type: 'params', value: '(.title)' },
+      { type: 'braceOpen' },
+
+      { type: 'text', value: 'padding' },
+      { type: 'colon' },
+      { type: 'text', value: '8px' },
+      { type: 'semicolon' },
+
+      { type: 'braceClose' },
+    ]);
+  });
+
+  it('should tokenize a full @honey-media block correctly', () => {
+    const tokens = tokenizeCss(`
+      @honey-media (sm:down) {
+        color: red;
+      }
+    `);
+
+    expect(tokens).toStrictEqual([
+      { type: 'at' },
+      { type: 'text', value: 'honey-media' },
+      { type: 'params', value: '(sm:down)' },
+      { type: 'braceOpen' },
+
+      { type: 'text', value: 'color' },
+      { type: 'colon' },
+      { type: 'text', value: 'red' },
+      { type: 'semicolon' },
+
+      { type: 'braceClose' },
+    ]);
+  });
+
+  it('should tokenize params groups correctly', () => {
+    const tokens = tokenizeCss('@honey-media (sm:down)');
+
+    expect(tokens).toStrictEqual([
+      { type: 'at' },
+      { type: 'text', value: 'honey-media' },
+      { type: 'params', value: '(sm:down)' },
     ]);
   });
 });

@@ -90,20 +90,20 @@ console.log(tokens);
 
 ```
 [
-  { "type": "text", value: ".btn" },
-  { type: "braceOpen" },
+  { "type": "text", "value": ".btn" },
+  { "type": "braceOpen" },
 
-  { type: "text", value: "color" },
-  { type: "colon" },
-  { type: "text", value: "red" },
-  { type: "semicolon" },
+  { "type": "text", "value": "color" },
+  { "type": "colon" },
+  { "type": "text", "value": "red" },
+  { "type": "semicolon" },
 
-  { type: "text", value: "padding" },
-  { type: "colon" },
-  { type: "text", value: "12px" },
-  { type: "semicolon" },
+  { "type": "text", "value": "padding" },
+  { "type": "colon" },
+  { "type": "text", "value": "12px" },
+  { "type": "semicolon" },
 
-  { type: "braceClose" }
+  { "type": "braceClose" }
 ]
 ```
 
