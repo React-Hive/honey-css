@@ -147,6 +147,37 @@ describe('[parseCssAtRule]: parse CSS @-rule', () => {
     ]);
   });
 
+  it('should parse vendor pseudo-element rule inside @honey-media block', () => {
+    const node = parseCssAtRule(
+      createCssTokenCursor(
+        tokenizeCss(`
+          @honey-media (sm:up) {
+            ::-webkit-scrollbar {
+              width: 11px;
+              height: 11px;
+            }
+          }
+        `),
+      ),
+    );
+
+    expect(node).toStrictEqual({
+      type: 'atRule',
+      name: 'honey-media',
+      params: '(sm:up)',
+      body: [
+        {
+          type: 'rule',
+          selector: '::-webkit-scrollbar',
+          body: [
+            { type: 'declaration', prop: 'width', value: '11px' },
+            { type: 'declaration', prop: 'height', value: '11px' },
+          ],
+        },
+      ],
+    });
+  });
+
   it('should parse @keyframes with animation name', () => {
     const node = parseCssAtRule(
       createCssTokenCursor(
@@ -276,5 +307,81 @@ describe('[parseCssAtRule]: parse CSS @-rule', () => {
     );
 
     expect(node.params).toBeUndefined();
+  });
+
+  it('should parse named @container with condition', () => {
+    const node = parseCssAtRule(
+      createCssTokenCursor(
+        tokenizeCss(`
+          @container sidebar (min-width: 600px) {
+            padding: 8px;
+          }
+        `),
+      ),
+    );
+
+    expect(node).toStrictEqual({
+      type: 'atRule',
+      name: 'container',
+      params: 'sidebar(min-width: 600px)',
+      body: [{ type: 'declaration', prop: 'padding', value: '8px' }],
+    });
+  });
+
+  it('should parse @container without container name', () => {
+    const node = parseCssAtRule(
+      createCssTokenCursor(
+        tokenizeCss(`
+          @container (min-width: 500px) {
+            .card {
+              display: grid;
+            }
+          }
+        `),
+      ),
+    );
+
+    expect(node).toStrictEqual({
+      type: 'atRule',
+      name: 'container',
+      params: '(min-width: 500px)',
+      body: [
+        {
+          type: 'rule',
+          selector: '.card',
+          body: [{ type: 'declaration', prop: 'display', value: 'grid' }],
+        },
+      ],
+    });
+  });
+
+  it('should parse @container with logical and condition', () => {
+    const node = parseCssAtRule(
+      createCssTokenCursor(
+        tokenizeCss(`
+          @container (width > 400px) and style(--responsive: true) {
+            h2 { font-size: 1.5em; }
+          }
+        `),
+      ),
+    );
+
+    expect(node.params).toBe('(width > 400px)and style(--responsive: true)');
+  });
+
+  it('should parse @container with condition list', () => {
+    const node = parseCssAtRule(
+      createCssTokenCursor(
+        tokenizeCss(`
+          @container card (width > 400px), style(--responsive: true), scroll-state(stuck: top) {
+            h2 { font-size: 1.5em; }
+          }
+        `),
+      ),
+    );
+
+    expect(node.params).toBe(
+      'card(width > 400px), style(--responsive: true), scroll-state(stuck: top)',
+    );
   });
 });
