@@ -1,3 +1,5 @@
+import { expect, it, describe } from 'vitest';
+
 import type { HoneyCssAstStylesheetNode } from '../types';
 import { stringifyCss } from '../stringify-css';
 

@@ -1,3 +1,5 @@
+import { expect, it, describe } from 'vitest';
+
 import { parseCssBlock } from '../parse-css-block';
 import { tokenizeCss } from '../tokenize-css';
 import { createCssTokenCursor } from '../create-css-token-cursor';

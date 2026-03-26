@@ -1,17 +1,14 @@
 {
   "compilerOptions": {
     "rootDir": "./src",
+    "outDir": "./dist",
     "lib": ["ESNext"],
     "target": "ES2022",
     "module": "ESNext",
-    "moduleResolution": "bundler",
     "esModuleInterop": true,
-    "outDir": "./dist",
     "allowSyntheticDefaultImports": true,
     "isolatedModules": true,
-    "skipLibCheck": true,
-    "strict": true,
-    "types": ["node", "jest"]
+    "skipLibCheck": true
   },
   "include": ["src"]
 }
