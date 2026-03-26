@@ -1,5 +1,3 @@
-import { expect, it, describe } from 'vitest';
-
 import { parseCss } from '../parse-css';
 
 describe('[parseCss]: parse full CSS input into AST', () => {

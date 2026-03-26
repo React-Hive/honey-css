@@ -1,5 +1,3 @@
-import { expect, it, describe } from 'vitest';
-
 import { tokenizeCss } from '../tokenize-css';
 
 describe('[tokenizeCss]: tokenize CSS input', () => {

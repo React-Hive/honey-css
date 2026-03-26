@@ -1,5 +1,3 @@
-import { expect, it, describe } from 'vitest';
-
 import { resolveCssSelector } from '../resolve-css-selector';
 
 describe('[resolveCssSelector]: resolve nested selectors', () => {

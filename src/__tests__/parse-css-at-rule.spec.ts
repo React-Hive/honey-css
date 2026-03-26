@@ -1,5 +1,3 @@
-import { expect, it, describe } from 'vitest';
-
 import { parseCssAtRule } from '../parse-css-at-rule';
 import { createCssTokenCursor } from '../create-css-token-cursor';
 import { tokenizeCss } from '../tokenize-css';

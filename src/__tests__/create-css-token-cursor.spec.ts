@@ -1,5 +1,3 @@
-import { expect, it, describe } from 'vitest';
-
 import { createCssTokenCursor } from '../create-css-token-cursor';
 
 describe('[createCssTokenCursor]: token cursor utilities', () => {
