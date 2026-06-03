@@ -466,6 +466,156 @@ resolveCssSelector('[data-x="a,b"]', '.scope');
 // → ".scope [data-x=\"a,b\"]"
 ```
 
+### 🧹 flattenCssRules
+
+When working with nested CSS, you often need to transform nested rules into normal flat CSS rules before stringification.
+
+The `flattenCssRules` helper converts a nested Honey CSS AST into a selector-based flat AST.
+
+It is especially useful for:
+
+- CSS-in-JS engines
+- styling compilers
+- scoped CSS processors
+- nested selector support
+- preprocessing before `stringifyCss`
+
+What It Does:
+
+- Flattens nested CSS rules
+- Resolves parent selectors using `resolveCssSelector`
+- Supports `&` parent references
+- Preserves declaration order
+- Preserves selector-context at-rules such as:
+  - `@media`
+  - `@supports`
+  - `@container`
+  - `@layer`
+- Preserves non-selector at-rules such as `@font-face` and `@keyframes` without applying parent selectors
+- Removes empty rules
+
+**Example**
+
+```ts
+import { flattenCssRules, parseCss, stringifyCss } from "@react-hive/honey-css";
+
+const ast = parseCss(`
+  .btn {
+    color: red;
+
+    &:hover {
+      color: blue;
+    }
+
+    @media (max-width: 600px) {
+      display: none;
+
+      &:hover {
+        opacity: 0.5;
+      }
+    }
+  }
+`);
+
+const flatAst = flattenCssRules(ast);
+const css = stringifyCss(flatAst);
+
+console.log(css);
+// .btn{color:red;}.btn:hover{color:blue;}@media (max-width: 600px){.btn{display:none;}.btn:hover{opacity:0.5;}}
+```
+
+**AST Transformation Example**
+
+```ts
+const inputAst = {
+  type: "stylesheet",
+  body: [
+    {
+      type: "rule",
+      selector: ".btn",
+      body: [
+        { type: "declaration", prop: "color", value: "red" },
+        {
+          type: "rule",
+          selector: "&:hover",
+          body: [
+            { type: "declaration", prop: "color", value: "blue" }
+          ]
+        }
+      ]
+    }
+  ]
+}
+```
+
+```ts
+const outputAst = {
+  type: "stylesheet",
+  body: [
+    {
+      type: "rule",
+      selector: ".btn",
+      body: [
+        { type: "declaration", prop: "color", value: "red" }
+      ]
+    },
+    {
+      type: "rule",
+      selector: ".btn:hover",
+      body: [
+        { type: "declaration", prop: "color", value: "blue" }
+      ]
+    }
+  ]
+}
+```
+
+**Declaration Order**
+
+The flattener preserves source order by splitting declaration groups around nested rules.
+
+```scss
+.parent {
+  color: red;
+
+  .child {
+    padding: 8px;
+  }
+
+  background: blue;
+}
+```
+
+Becomes:
+
+```css
+.parent{color:red;}.parent .child{padding:8px;}.parent{background:blue;}
+```
+
+This may produce the same selector more than once, but that is intentional because CSS order matters.
+
+**Selector-context at-rules**
+
+Some at-rules keep the current selector context inside their body.
+
+```scss
+.btn {
+  @media (max-width: 600px) {
+    display: none;
+
+    &:hover {
+      opacity: 0.5;
+    }
+  }
+}
+```
+
+Becomes:
+
+```css
+@media (max-width: 600px){.btn{display:none;}.btn:hover{opacity:0.5;}}
+```
+
 ### 🧾 stringifyCss
 
 After transforming or generating a CSS AST, you can convert it back into a compact CSS string using `stringifyCss`.
