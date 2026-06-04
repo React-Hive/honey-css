@@ -1,3 +1,5 @@
+import * as CSS from 'csstype';
+
 /**
  * A single lexical token produced by the Honey CSS tokenizer.
  *
@@ -208,3 +210,94 @@ export type HoneyCssAstNode =
   | HoneyCssAstRuleNode
   | HoneyCssAstDeclarationNode
   | HoneyCssAstAtRuleNode;
+
+/**
+ * Represents absolute CSS dimension units.
+ *
+ * These units are fixed in physical measurements.
+ *
+ * - `'px'` — pixels
+ * - `'cm'` — centimeters
+ * - `'mm'` — millimeters
+ * - `'in'` — inches
+ * - `'pt'` — points
+ * - `'pc'` — picas
+ */
+type HoneyCssAbsoluteDimensionUnit = 'px' | 'cm' | 'mm' | 'in' | 'pt' | 'pc';
+
+/**
+ * Represents relative CSS dimension units.
+ *
+ * These units scale depending on the context.
+ *
+ * - `'em'` — relative to the font-size of the element
+ * - `'rem'` — relative to the font-size of the root element
+ * - `'%'` — percentage of the parent element
+ * - `'vh'` — 1% of the viewport height
+ * - `'vw'` — 1% of the viewport width
+ * - `'vmin'` — 1% of the smaller dimension of the viewport
+ * - `'vmax'` — 1% of the larger dimension of the viewport
+ */
+type HoneyCssRelativeDimensionUnit = 'em' | 'rem' | '%' | 'vh' | 'vw' | 'vmin' | 'vmax';
+
+/**
+ * Represents any valid CSS dimension unit, including both absolute and relative types.
+ */
+export type HoneyCssDimensionUnit = HoneyCssAbsoluteDimensionUnit | HoneyCssRelativeDimensionUnit;
+
+/**
+ * Represents CSS properties related to spacing and positioning.
+ */
+export type HoneyCssSpacingProperty = keyof Pick<
+  CSS.Properties,
+  | 'margin'
+  | 'marginTop'
+  | 'marginRight'
+  | 'marginBottom'
+  | 'marginLeft'
+  | 'padding'
+  | 'paddingTop'
+  | 'paddingRight'
+  | 'paddingBottom'
+  | 'paddingLeft'
+  | 'paddingBlock'
+  | 'paddingBlockStart'
+  | 'paddingBlockEnd'
+  | 'top'
+  | 'right'
+  | 'bottom'
+  | 'left'
+  | 'inset'
+  | 'gap'
+  | 'rowGap'
+  | 'columnGap'
+>;
+
+/**
+ * Represents shorthand spacing properties that support multi-value arrays.
+ *
+ * These properties accept 2–4 space-separated values
+ * to control spacing on multiple sides (e.g., top, right, bottom, left).
+ */
+export type HoneyCssShorthandSpacingProperty = keyof Pick<
+  CSS.Properties,
+  'margin' | 'padding' | 'gap'
+>;
+
+/**
+ * Represents a subset of CSS properties that define color-related styles.
+ */
+export type HoneyCssColorProperty = keyof Pick<
+  CSS.Properties,
+  | 'color'
+  | 'backgroundColor'
+  | 'borderColor'
+  | 'borderTopColor'
+  | 'borderRightColor'
+  | 'borderBottomColor'
+  | 'borderLeftColor'
+  | 'outlineColor'
+  | 'textDecorationColor'
+  | 'fill'
+  | 'stroke'
+>;

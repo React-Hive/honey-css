@@ -1,6 +1,6 @@
 {
   "name": "@react-hive/honey-css",
-  "version": "1.18.0",
+  "version": "1.19.0",
   "description": "A lightweight CSS tokenizer and parser that produces a simple AST for custom CSS processing.",
   "keywords": [
     "css",
@@ -50,7 +50,8 @@
     "node": ">=24"
   },
   "dependencies": {
-    "@react-hive/honey-utils": "4.0.0"
+    "@react-hive/honey-utils": "4.0.0",
+    "csstype": "3.2.3"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",
